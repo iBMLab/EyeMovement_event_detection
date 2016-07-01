@@ -20,7 +20,7 @@ Distance    = 70;
 % velocity calculation duration
 velt        = 20;
 % in degrees per second
-angspdthrs  = 20;
+angspdthrs  = 30;
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 % Degree per visual angle
