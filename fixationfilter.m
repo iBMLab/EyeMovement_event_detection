@@ -21,6 +21,8 @@ Distance    = 70;
 velt        = 20;
 % in degrees per second
 angspdthrs  = 30;
+% Minimal fixation duration (remove fixation with too short duration)
+minfixdur   = 0.020; 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 % Degree per visual angle
@@ -73,6 +75,10 @@ if numsample > velt
             durfix     = time_end - time_start;
             fixmat(fixtmp,1:8) = [x_fix,y_fix,durfix,fixtmp,time_start,time_end,sample_start,sample_end];
         end
+        fixmat = fixmat(fixmat(:,3)>minfixdur,:);
+        if isempty(fixmat) ~= 1
+            fixmat(:,4) = 1:size(fixmat,1);
+        end
     else
         fixmat = [];
     end
@@ -86,11 +92,18 @@ if numsample > velt
         title(condinfo)
         subplot(1,3,[1 2]);hold on;
         plot(timesample,eyex*DPP,timesample,eyey*DPP)
+        satemp=[timesample(fixmat(:,7)),eyex(fixmat(:,7)),eyey(fixmat(:,7)),...
+                timesample(fixmat(:,8)),eyex(fixmat(:,8)),eyey(fixmat(:,8))];
+        scatter(satemp(:,1),satemp(:,2)*DPP,'r','filled');
+        scatter(satemp(:,1),satemp(:,3)*DPP,'r','filled');
+        scatter(satemp(:,4),satemp(:,5)*DPP,'k','filled');
+        scatter(satemp(:,4),satemp(:,6)*DPP,'k','filled');
+            
         plot(xi1,velocity1.*10./quantile(velocity1(:),.99),'k')
         % [pks1,loc1,w1,p1]=findpeaks(velocity1(:,1),'MinPeakProminence',minpp);
         % scatter(loc1,3.9*ones(1,length(loc1)),'v')
         plot(timesample,fixvect*3.9,'.')
-        axis([0,timesample(end),0,Res(4)*DPP])
+        xlim([0,timesample(end)])
         
         subplot(1,3,3);hold on;
         scatter(eyex,eyey)
