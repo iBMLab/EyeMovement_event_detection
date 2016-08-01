@@ -6,7 +6,7 @@ function fixmat = fixationfilter(eyex,eyey,timesample,condinfo,plotopt)
 % plotopt    - output filtering result if plotopt=1
 %
 % output fixmat:
-% [x_fix,y_fix,dur_fix,time_start,time_end,sample_start,sample_end,condinfo]
+% [x_fix,y_fix,dur_fix,num_fix,time_start,time_end,sample_start,sample_end,condinfo]
 % 
 % IMPORTANT: double check the parameters in the function!!!
 
