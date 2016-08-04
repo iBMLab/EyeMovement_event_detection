@@ -51,11 +51,13 @@ if numsample > velt
     eyey1  = interp1(timesample,eyey,xi1,'nearest');
     
     % Compute angular speed and detect saccades
+    % compute velocity using a forward and backward box filter
     velovect  = DPP * sqrt((eyex1(velt+1:endtime)-eyex1(1:endtime-velt)).^2 ...
         + (eyey1(velt+1:endtime)-eyey1(1:endtime-velt)).^2)./ ...
         (velt/samplerate);
-    velocity1 = cat(1,zeros(velt,1),velovect');
+    velocity1 = cat(1,zeros(velt/2,1),velovect',zeros(velt/2,1));
     velocity  = interp1(xi1,velocity1,timesample,'nearest');
+    
     fixvect   = ones(numsample,1);
     fixvect(exlIdx1t==1 | velocity>angspdthrs | isnan(velocity)) = 0;
     if SR>500;fixvect   = conv(fixvect,[1 1 1],'same')>0;end
