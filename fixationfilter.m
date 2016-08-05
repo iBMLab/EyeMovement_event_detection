@@ -37,6 +37,7 @@ if sum(diff(timesample)<0)
 end
 
 numsample   = length(timesample);
+timesample(diff(timesample)==0) = timesample(diff(timesample)==0) - min(diff(timesample))/2;
 if numsample > velt
     % replace sample outside of the screen with NaN (thus exclude the blink)
     exlIdx1t    = eyex<Res(1) | eyey<Res(2) | eyex>Res(3) | eyey>Res(4);
