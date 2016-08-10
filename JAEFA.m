@@ -127,7 +127,7 @@ if numsample > velt
     if plotopt
         %%
         scrsz=get(0,'ScreenSize');
-        figure('NumberTitle','off','Name','Check Trials',...
+        figure('NumberTitle','off','Name','Check Trials - Press any key to continue',...
             'Position',[scrsz(1) scrsz(4)/4 scrsz(3) scrsz(4)/2]);
         title(condinfo)
         subplot(1,3,[1 2]);hold on;
@@ -138,18 +138,21 @@ if numsample > velt
         scatter(satemp(:,1),satemp(:,3)*DPP,'r','filled');
         scatter(satemp(:,4),satemp(:,5)*DPP,'k','filled');
         scatter(satemp(:,4),satemp(:,6)*DPP,'k','filled');
-            
+        
         plot(xi1,velocity1.*10./quantile(velocity1(:),.99),'k')
         % [pks1,loc1,w1,p1]=findpeaks(velocity1(:,1),'MinPeakProminence',minpp);
         % scatter(loc1,3.9*ones(1,length(loc1)),'v')
         plot(xi1,fixvect*3.9,'.')
         xlim([0,timesample(end)])
+        ylabel('Visual Degree')
+        xlabel('Time (s)')
         
         subplot(1,3,3);hold on;
         scatter(eyex,eyey)
         scatter(fixmat(:,1),fixmat(:,2),'fill')
         set(gca, 'YDir', 'reverse');
         axis('equal')
+        title('Spatial distribution of sample (in blue) and fixation (in red)')
         w = waitforbuttonpress;
         close
     end
