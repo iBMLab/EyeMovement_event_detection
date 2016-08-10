@@ -17,7 +17,7 @@ Res         = [0 0 1920 1080];
 % Screen  Screen_Size in cm
 Screen_Size = [52.128 29.322];
 % View distance of subjects in cm
-Distance    = 60;
+Distance    = 70;
 % velocity calculation duration
 velt        = 20;
 % in degrees per second
@@ -39,6 +39,15 @@ if sum(diff(timesample)<0)
     timesample(1:idxtmp(end)) = [];
 end
 
+% %%%%%%%%%%% Beta: convolution method for computing visual angle %%%%%%%%%%%
+% Tail=round(velt/2); % per-saccade/post-saccade intervel, this will the only parameter.
+%          % it decide the minimal temporal seperation between 2 saccades
+% xt=-Tail:1:Tail;
+% 
+% % Unit Step Function
+% yUSF=heaviside(xt)*2-1; % put minial value to -1, now it has range [-1 1]
+% %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
 numsample   = length(timesample);
 timesample(diff(timesample)==0) = timesample(diff(timesample)==0) - min(diff(timesample))/2;
 if numsample > velt
@@ -54,12 +63,29 @@ if numsample > velt
     eyex1  = interp1(timesample,eyex,xi1,'nearest');
     eyey1  = interp1(timesample,eyey,xi1,'nearest');
     
+%     %%%%%%%%% Beta: convolution method for computing visual angle %%%%%%%%%
+%     eyedata=[eyex1;eyey1]';
+%     convLayer1=zeros(size(eyedata));
+%     outputLayer1tmp=zeros(size(eyedata));
+%     for ichanal=1:size(eyedata,2)
+%         convLayer1(:,ichanal)=conv(eyedata(:,ichanal),yUSF,'same');
+%     end
+%     for ieye=1:(size(eyedata,2)/2)
+%         outputLayer1tmp(:,1+(ieye-1)*2)=sum(abs(convLayer1(:,[1 2]+(ieye-1)*2)),2);
+%         outputLayer1tmp(:,2+(ieye-1)*2)=sqrt(convLayer1(:,1+(ieye-1)*2).^2+convLayer1(:,2+(ieye-1)*2).^2);
+%     end
+%     velocity1 = outputLayer1tmp(:,2);
+%     velocity1(1:Tail) = 0;
+%     velocity1(end-Tail:end) = 0;
+%     %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
     % Compute angular speed and detect saccades
     % compute velocity using a forward and backward box filter
     velovect  = DPP * sqrt((eyex1(velt+1:endtime)-eyex1(1:endtime-velt)).^2 ...
         + (eyey1(velt+1:endtime)-eyey1(1:endtime-velt)).^2)./ ...
         (velt/samplerate);
     velocity1 = cat(1,zeros(velt/2,1),velovect',zeros(velt/2,1));
+    
     % velocity  = interp1(xi1,velocity1,timesample,'nearest');
     fixvect   = ones(length(xi1),1);
     fixvect(velocity1>angspdthrs | isnan(velocity1)) = 0;
