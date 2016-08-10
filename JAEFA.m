@@ -1,4 +1,5 @@
-function fixmat = fixationfilter(eyex,eyey,timesample,condinfo,plotopt)
+function fixmat = JAEFA(eyex,eyey,timesample,condinfo,plotopt)
+% JAEFA - Just Another Eye-movement Filtering Algorithm
 % input:
 % eyex, eyey - in pixel space
 % timesample - in second, linear increase time stream
@@ -16,13 +17,15 @@ Res         = [0 0 1920 1080];
 % Screen  Screen_Size in cm
 Screen_Size = [52.128 29.322];
 % View distance of subjects in cm
-Distance    = 70;
+Distance    = 60;
 % velocity calculation duration
 velt        = 20;
 % in degrees per second
 angspdthrs  = 30;
 % Minimal fixation duration (remove fixation with too short duration)
 minfixdur   = 0.020; 
+% Minimal saccade sample (combine fixations that are too short apart)
+minsaccsp   = 10;
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 % Degree per visual angle
@@ -57,26 +60,34 @@ if numsample > velt
         + (eyey1(velt+1:endtime)-eyey1(1:endtime-velt)).^2)./ ...
         (velt/samplerate);
     velocity1 = cat(1,zeros(velt/2,1),velovect',zeros(velt/2,1));
-    velocity  = interp1(xi1,velocity1,timesample,'nearest');
+    % velocity  = interp1(xi1,velocity1,timesample,'nearest');
+    fixvect   = ones(length(xi1),1);
+    fixvect(velocity1>angspdthrs | isnan(velocity1)) = 0;
+    if SR > 500;fixvect   = conv(fixvect,[1 1 1],'same')>0;end
     
-    fixvect   = ones(numsample,1);
-    fixvect(exlIdx1t==1 | velocity>angspdthrs | isnan(velocity)) = 0;
-    if SR>500;fixvect   = conv(fixvect,[1 1 1],'same')>0;end
-    
-    [fixlabel,Nfix] = bwlabel(fixvect);
+    [sacclabel,Nsacc] = bwlabel(fixvect==0);
+    for sacctmp = 1:Nsacc
+        if sum(sacclabel==sacctmp)<minsaccsp
+            fixvect(sacclabel==sacctmp) = 1;
+        end
+    end
+    [fixlabel1,Nfix] = bwlabel(fixvect);
+    fixlabel     = interp1(xi1,fixlabel1,timesample,'nearest');
     if Nfix>0
         fixmat        = zeros(Nfix,8+length(condinfo));
         fixmat(:,9:end) = kron(condinfo,ones(Nfix,1));
         for fixtmp = 1:Nfix
             fixind = find(fixlabel == fixtmp);
-            x_fix  = mean(eyex(fixind));
-            y_fix  = mean(eyey(fixind));
+            if ~isempty(fixind)
+            x_fix  = nanmean(eyex(fixind));
+            y_fix  = nanmean(eyey(fixind));
             sample_start = fixind(1);
             sample_end   = fixind(end);
             time_start = timesample(sample_start);
             time_end   = timesample(sample_end);
             durfix     = time_end - time_start;
             fixmat(fixtmp,1:8) = [x_fix,y_fix,durfix,fixtmp,time_start,time_end,sample_start,sample_end];
+            end
         end
         fixmat = fixmat(fixmat(:,3)>minfixdur,:);
         if isempty(fixmat) ~= 1
@@ -105,7 +116,7 @@ if numsample > velt
         plot(xi1,velocity1.*10./quantile(velocity1(:),.99),'k')
         % [pks1,loc1,w1,p1]=findpeaks(velocity1(:,1),'MinPeakProminence',minpp);
         % scatter(loc1,3.9*ones(1,length(loc1)),'v')
-        plot(timesample,fixvect*3.9,'.')
+        plot(xi1,fixvect*3.9,'.')
         xlim([0,timesample(end)])
         
         subplot(1,3,3);hold on;
